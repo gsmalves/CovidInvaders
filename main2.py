@@ -1,6 +1,7 @@
 import invaders
 import pygame
 from sys import exit
+import random
 
 def main() -> None:
 
@@ -76,18 +77,37 @@ def main() -> None:
             # continuous enemy projectile
             virus_hit.move(attacker_x)
             if virus_hit.collide(ground):
-                virus_hit, attacker_x, attacker_y = invaders.Enemy.attack(virus_hit_color)
+                attack_result = invaders.Enemy.attack(virus_hit_color)
+                virus_hit = attack_result
+                attacker_x = 0  # Defina um valor padrão para attacker_x
+                attacker_y = 0  # Defina um valor padrão para attacker_y
+
+                # Operação matemática relacionada ao vírus
+                operation = random.choice(["+", "-", "*"])  # Adicione outras operações, se desejar
+                num1 = random.randint(1, 10)  # Primeiro número aleatório
+                num2 = random.randint(1, 10)  # Segundo número aleatório
+                result = eval(f"{num1} {operation} {num2}")  # Calcula o resultado da operação
+
+                virus_hit = invaders.Projectile(vaccine.width, (vaccine.x, vaccine.y), virus_hit_color)
+                virus_hit.operation = f"{num1} {operation} {num2}"
+
                 virus_hit.reset(attacker_y, True)
                 virus_hit.move(attacker_x)
             virus_hit.draw()
 
-        for virus in invaders.Enemy.all:
-            # virus collision with vacc_hit
-            if virus.visible and vacc_hit.collide(virus.img.get_rect(topleft=(virus.x, virus.y)), True):
-                answer = input("Digite o resultado da operação matemática: ")
-                result = eval(virus.operation)
 
-                if int(answer) == result:
+        for virus in invaders.Enemy.all:
+            # Restante do código...
+
+            if virus.visible and vacc_hit.collide(virus.img.get_rect(topleft=(virus.x, virus.y)), True):
+                operation_text = invaders.text(fonts["small"], f"Operation: {virus.operation}")
+                operation_text_rect = operation_text.get_rect(center=(virus.x + virus.width // 2, virus.y - 20))
+                surface.blit(operation_text, operation_text_rect)
+
+                # Capturar a resposta do jogador
+                answer = input("Digite o resultado da operação matemática: ")
+
+                if virus.check_answer(answer):
                     virus.visible = False
                     vacc_hit.reset(vaccine.y)
                     score += virus.pts
@@ -100,21 +120,21 @@ def main() -> None:
 
         score_text = invaders.text(fonts["small"], f"Score: {score}")
         quit_text = invaders.text(fonts["small"], "Press Q to quit")
-        
+
         if game["start"] and not game["stop"]:
             surface.blit(score_text, (invaders.em, invaders.em))
             surface.blit(quit_text, quit_text.get_rect(topright = (surface.get_width() - invaders.em, invaders.em)))
-        
+
         elif game["stop"]:
-            
-            # game stop screen
+
+            # Tela de fim de jogo
             texts = [
                 invaders.text(fonts["large"], "Game Over!"),
                 score_text,
                 invaders.text(fonts["small"], f"Maximum Score: {total_score}")
             ]
 
-            # win or lose
+            # Vitória ou derrota
             if score == total_score:
                 texts.append(invaders.text(fonts["large"], "You have ended Covid!"))
                 texts.append(invaders.emoji_text(invaders.text(fonts["small"], "Let's celebrate!"), invaders.text(fonts["unicode"], "🎉")))
@@ -126,10 +146,10 @@ def main() -> None:
             texts.append(quit_text)
 
             invaders.text_screen(texts)
-        
+
         else:
 
-            # game start screen
+            # Tela de início do jogo
             texts = [
                 invaders.text(fonts["large"], "Welcome to Covid invaders!"),
                 invaders.text(fonts["small"], "AIM: Eradicate all variants")
@@ -137,9 +157,9 @@ def main() -> None:
             texts.append(invaders.text(fonts["small"], "Press SPACE to play"))
 
             invaders.text_screen(texts)
-        
+
         pygame.display.update()
-    
+
     pygame.quit()
     exit(0)
 

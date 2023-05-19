@@ -1,6 +1,7 @@
 from os import listdir
 from random import choice
 import pygame
+import random
 
 em = 16
 
@@ -82,10 +83,13 @@ class Player(Sprite):
 class Enemy(Sprite):
     dx = 1
     all = []
-    def __init__(self, folder_name: str, points = 10):
+
+    def __init__(self, folder_name: str, points=10, operation=""):
         super().__init__()
 
+
         # all enemy images are of the same width and height
+        self.operation = operation
         self.img = pygame.image.load(f"{folder_name}//enemy1.png")
         self.height = self.img.get_height()
         self.width = self.img.get_width()
@@ -107,7 +111,11 @@ class Enemy(Sprite):
 
         self.row = (self.y - self.__class__.all[0].y) // self.height + 1
         self.img = pygame.image.load(f"{folder_name}//enemy{self.row}.png")
-
+    @classmethod
+    def check_answer(self, answer):
+        result = eval(self.operation)
+        return int(answer) == result
+    
     @classmethod
     def types_surfs(cls, names, font):
         res = []
@@ -153,17 +161,19 @@ class Enemy(Sprite):
             for instance in cls.all: instance.y += instance.height
     
     @classmethod
-    def attack(cls, color = (0, 0, 0)):
+    def attack(cls, color=(0, 0, 0)):
+        operations = ["+", "-", "*", "/"]
         free = []
         for instance in cls.all:
             if instance.visible:
                 below = [i for i in cls.all if i.x == instance.x and i.row > instance.row]
                 if not below or all(not i.visible for i in below): free.append(instance)
-        attacker = choice(free)
+        operation = random.choice(operations)
+        attacker = random.choice(free)
         hit = Projectile(attacker.width, (attacker.x, attacker.y), color)
         hit.dy *= -1
         hit.fire = True
-        return hit, attacker.x, attacker.y
+        return hit, attacker.x, attacker.y, operation
 
 class Projectile(Sprite):
     all = []
