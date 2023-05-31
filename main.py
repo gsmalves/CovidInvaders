@@ -15,6 +15,7 @@ clock = pygame.time.Clock()
 branco = (255, 255, 255)
 preto = (0, 0, 0)
 vermelho = (255, 0, 0)
+jogo_em_execucao = True
 
 class Jogador(pygame.sprite.Sprite):
     def __init__(self):
@@ -62,6 +63,7 @@ class Bala(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("bala.png")
+        self.image = pygame.transform.scale(self.image, (20, 20))  # Redimensionar a imagem da bala
         self.rect = self.image.get_rect()
         self.velocidade = -5
 
@@ -93,6 +95,96 @@ def mostrar_mensagem(texto):
 # Carregar imagem de fundo
 fundo = pygame.image.load("back.png")
 fundo = pygame.transform.scale(fundo, (largura_tela, altura_tela))
+
+
+def exibir_menu():
+    pygame.init()
+    
+    largura_tela = 800
+    altura_tela = 600
+
+    tela = pygame.display.set_mode((largura_tela, altura_tela))
+    pygame.display.set_caption("Covid Invaders Matemático")
+
+    clock = pygame.time.Clock()
+
+    branco = (255, 255, 255)
+    cor_titulo = (255, 189, 89)  # #FFBD59
+
+    fonte_titulo = pygame.font.Font("ArchivoBlack-Regular.ttf", 48)
+    fonte_descricao = pygame.font.Font("ArchivoBlack-Regular.ttf", 24)
+
+    fundo = pygame.image.load("back.png")
+    fundo = pygame.transform.scale(fundo, (largura_tela, altura_tela))
+
+    titulo_texto = fonte_titulo.render("Covid Invaders", True, cor_titulo)
+    titulo_rect = titulo_texto.get_rect()
+    titulo_rect.center = (largura_tela // 2, altura_tela // 2 - 80)
+
+    descricao_texto = fonte_descricao.render("Missão Matemática", True, cor_titulo)
+    descricao_rect = descricao_texto.get_rect()
+    descricao_rect.center = (largura_tela // 2, altura_tela // 2 - 50)
+
+    jogar_texto = fonte_descricao.render("JOGAR", True, branco)
+    jogar_rect = jogar_texto.get_rect()
+    jogar_rect.center = (largura_tela // 2, altura_tela // 2 + 10)
+
+    sair_texto = fonte_descricao.render("SAIR", True, branco)
+    sair_rect = sair_texto.get_rect()
+    sair_rect.center = (largura_tela // 2, altura_tela // 2 + 50)
+
+    # Carregar imagens dos inimigos
+    inimigo_images = []
+    inimigo_rects = []
+
+    imagens_inimigos = ["enemy1.png", "enemy2.png", "enemy3.png", "enemy4.png","icon.png"]  # Adicione os nomes das novas imagens de inimigos aqui
+
+    posicoes_inimigos = [
+        (largura_tela // 2 - 250, altura_tela // 2 - 100),
+        (largura_tela // 2 - 100, altura_tela // 2 - 170),
+        (largura_tela // 2 + 100, altura_tela // 2 - 180),
+        (largura_tela // 2 + 250, altura_tela // 2 - 150),
+        (largura_tela // 2 + 150, altura_tela // 2 + 150),
+        ]  # Ajuste as coordenadas (posições) de cada inimigo conforme necessário
+
+    for i, imagem in enumerate(imagens_inimigos):
+        inimigo_image = pygame.image.load(imagem)
+        inimigo_image = pygame.transform.scale(inimigo_image, (60, 60))  # Redimensionar as imagens dos inimigos
+        inimigo_images.append(inimigo_image)
+
+        posicao_x, posicao_y = posicoes_inimigos[i]
+
+        inimigo_rect = inimigo_image.get_rect()
+        inimigo_rect.center = (posicao_x, posicao_y)
+        inimigo_rects.append(inimigo_rect)
+    rodando = True
+    while rodando:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                rodando = False
+            elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                if jogar_rect.collidepoint(evento.pos):
+                    # Iniciar o jogo
+                    jogo()
+                elif sair_rect.collidepoint(evento.pos):
+                    rodando = False
+
+        tela.blit(fundo, (0, 0))
+        tela.blit(titulo_texto, titulo_rect)
+        tela.blit(descricao_texto, descricao_rect)
+        tela.blit(jogar_texto, jogar_rect)
+        tela.blit(sair_texto, sair_rect)
+
+        # Exibir imagens dos inimigos
+        for inimigo_rect, inimigo_image in zip(inimigo_rects, inimigo_images):
+            tela.blit(inimigo_image, inimigo_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+
+
 
 def jogo():
     jogador = Jogador()
@@ -149,6 +241,12 @@ def jogo():
         pygame.display.flip()
         clock.tick(60)
 
-    pygame.quit()
+        if not invasores:  # Se a lista de invasores estiver vazia
+            invasores = criar_invasores(10)  # Cria uma nova onda de invasores
 
-jogo()
+    # Reiniciar o jogo
+    exibir_menu()
+
+   
+
+exibir_menu()
