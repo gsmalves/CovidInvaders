@@ -63,7 +63,7 @@ class Bala(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("bala.png")
-        self.image = pygame.transform.scale(self.image, (20, 20))  # Redimensionar a imagem da bala
+        self.image = pygame.transform.scale(self.image, (40, 20))  # Redimensionar a imagem da bala
         self.rect = self.image.get_rect()
         self.velocidade = -5
 
@@ -129,27 +129,32 @@ def exibir_menu():
     jogar_rect = jogar_texto.get_rect()
     jogar_rect.center = (largura_tela // 2, altura_tela // 2 + 10)
 
+    recordes_texto = fonte_descricao.render("RECORDES", True, branco)
+    recordes_rect = recordes_texto.get_rect()
+    recordes_rect.center = (largura_tela // 2, altura_tela // 2 + 50)
+
     sair_texto = fonte_descricao.render("SAIR", True, branco)
     sair_rect = sair_texto.get_rect()
-    sair_rect.center = (largura_tela // 2, altura_tela // 2 + 50)
+    sair_rect.center = (largura_tela // 2, altura_tela // 2 + 90)
 
     # Carregar imagens dos inimigos
     inimigo_images = []
     inimigo_rects = []
 
-    imagens_inimigos = ["enemy1.png", "enemy2.png", "enemy3.png", "enemy4.png","icon.png"]  # Adicione os nomes das novas imagens de inimigos aqui
+    imagens_inimigos = ["virus (2).png", "virus.png", "virus (2).png", "virus (3).png","vaccine (2).png","protect.png"]  # Adicione os nomes das novas imagens de inimigos aqui
 
     posicoes_inimigos = [
-        (largura_tela // 2 - 250, altura_tela // 2 - 100),
-        (largura_tela // 2 - 100, altura_tela // 2 - 170),
-        (largura_tela // 2 + 100, altura_tela // 2 - 180),
-        (largura_tela // 2 + 250, altura_tela // 2 - 150),
-        (largura_tela // 2 + 150, altura_tela // 2 + 150),
+        (largura_tela // 2 - 270, altura_tela // 2 - 100),
+        (largura_tela // 2 - 100, altura_tela // 2 - 180),
+        (largura_tela // 2 + 100, altura_tela // 2 - 190),
+        (largura_tela // 2 + 250, altura_tela // 2 - 120),
+        (largura_tela // 2 + 180, altura_tela // 2 + 150),
+        (largura_tela // 2 - 180, altura_tela // 2 + 150),
         ]  # Ajuste as coordenadas (posições) de cada inimigo conforme necessário
 
     for i, imagem in enumerate(imagens_inimigos):
         inimigo_image = pygame.image.load(imagem)
-        inimigo_image = pygame.transform.scale(inimigo_image, (60, 60))  # Redimensionar as imagens dos inimigos
+        inimigo_image = pygame.transform.scale(inimigo_image, (65, 65))  # Redimensionar as imagens dos inimigos
         inimigo_images.append(inimigo_image)
 
         posicao_x, posicao_y = posicoes_inimigos[i]
@@ -173,6 +178,7 @@ def exibir_menu():
         tela.blit(titulo_texto, titulo_rect)
         tela.blit(descricao_texto, descricao_rect)
         tela.blit(jogar_texto, jogar_rect)
+        tela.blit(recordes_texto, recordes_rect)
         tela.blit(sair_texto, sair_rect)
 
         # Exibir imagens dos inimigos
@@ -188,13 +194,16 @@ def exibir_menu():
 
 def jogo():
     jogador = Jogador()
-    invasores = criar_invasores(10)
     balas = pygame.sprite.Group()
 
     pontuacao = 0
     fonte = pygame.font.Font(None, 36)
 
     rodando = True
+    contador_tempo = 0
+    quantidade_invasores = 1  # Initial number of invaders
+    invasores = criar_invasores(quantidade_invasores)  # Create initial invaders
+
     while rodando:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -213,6 +222,10 @@ def jogo():
         colisoes = pygame.sprite.groupcollide(balas, invasores, True, True)
         for bala, invasor in colisoes.items():
             pontuacao += 1
+
+        if contador_tempo % 60 == 0:  # Increase number of invaders every second
+            quantidade_invasores += 1
+            invasores.add(Invasor(random.choice(["+", "-", "*", "/"])))
 
         for invasor in invasores:
             if invasor.rect.bottom >= altura_tela:
@@ -241,12 +254,14 @@ def jogo():
         pygame.display.flip()
         clock.tick(60)
 
-        if not invasores:  # Se a lista de invasores estiver vazia
-            invasores = criar_invasores(10)  # Cria uma nova onda de invasores
+        contador_tempo += 1
 
-    # Reiniciar o jogo
+        if not invasores:
+            invasores.add(Invasor(random.choice(["+", "-", "*", "/"])))  # Add a new invader
+
+    # Restart the game
     exibir_menu()
 
-   
 
+   
 exibir_menu()
