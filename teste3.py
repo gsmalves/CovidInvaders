@@ -2,8 +2,6 @@ import pygame
 import random
 import operator
 import math
-
-
 pygame.init()
 
 largura_tela = 800
@@ -24,7 +22,7 @@ class Jogador(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("assets/player.png")
         self.rect = self.image.get_rect()
-        self.rect.centerx = (largura_tela // 2) - 10
+        self.rect.centerx = largura_tela // 2
         self.rect.bottom = altura_tela - 10
         self.velocidade = 5
 
@@ -34,6 +32,7 @@ class Jogador(pygame.sprite.Sprite):
             self.rect.x -= self.velocidade
         if teclas_pressionadas[pygame.K_RIGHT] and self.rect.right < largura_tela:
             self.rect.x += self.velocidade
+
 
 
 class Invasor(pygame.sprite.Sprite):
@@ -50,16 +49,17 @@ class Invasor(pygame.sprite.Sprite):
         self.resposta = self.calcular_resposta()
         self.velocidade = 0.25
 
-
     def calcular_resposta(self):
         if self.operacao == "+":
             return self.valor1 + self.valor2
         elif self.operacao == "-":
+            if self.valor1 < self.valor2:
+                self.valor1, self.valor2 = self.valor2, self.valor1
             return self.valor1 - self.valor2
         elif self.operacao == "*":
             return self.valor1 * self.valor2
         elif self.operacao == "/":
-            return self.valor1 / self.valor2
+            return self.valor1 // self.valor2
 
     def update(self):
         self.rect.y += self.velocidade
@@ -113,55 +113,20 @@ class BotaoRemover(pygame.sprite.Sprite):
     def desenhar(self, tela):
         tela.blit(self.imagem, self.rect)
 
-class Coracao(pygame.sprite.Sprite):
-    def __init__(self, imagem, posicao):
-        super().__init__()
-        self.image = imagem
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = posicao
-
-# Função para carregar a imagem do coração
-def carregar_imagem_coração(caminho):
-    imagem = pygame.image.load(caminho).convert_alpha()
-    return pygame.transform.scale(imagem, (30, 30))
-
 def criar_invasores(quantidade):
     invasores = pygame.sprite.Group()
-    #operacoes = ["+", "*", "/"]
+    operacoes = ["+", "-", "*", "/"]
     for _ in range(quantidade):
         operacao = random.choice(operacoes)
         invasor = Invasor(operacao)
-        invasor.rect.x = random.randint(0, largura_tela - invasor.rect.width)
-        invasor.rect.y = -invasor.rect.height
-
-        colisoes = pygame.sprite.spritecollide(invasor, invasores, False)
-        while colisoes:  # Verifica se houve colisão com outro invasor
-            invasor.rect.x = random.randint(0, largura_tela - invasor.rect.width)
-            invasor.rect.y = -invasor.rect.height
-            colisoes = pygame.sprite.spritecollide(invasor, invasores, False)
-
-        if operacao == "+":
-            invasor.valor1 = random.randint(0, 10)
-            invasor.valor2 = random.randint(0, 10)
-            invasor.resposta = invasor.valor1 + invasor.valor2
-        elif operacao == "*":
-            invasor.valor1 = random.randint(0, 10)
-            invasor.valor2 = random.randint(0, 10)
-            invasor.resposta = invasor.valor1 * invasor.valor2
-        elif operacao == "-":
-            invasor.valor1 = random.randint(1, 10)
-            invasor.valor2 = random.randint(0, invasor.valor1 - 1)  # Garante que valor2 seja menor que valor1
-            invasor.resposta = invasor.valor1 - invasor.valor2
-        else:  # Operação de divisão
-            invasor.valor2 = random.randint(1, 10)
-            invasor.valor1 = invasor.valor2 * random.randint(1, 10)  # Garante que valor1 seja um múltiplo de valor2
-            invasor.resposta = int(invasor.valor1 / invasor.valor2)
         invasores.add(invasor)
     return invasores
 
 def criar_bala(jogador, direcao_x, direcao_y):
     bala = Bala(jogador.rect.centerx, jogador.rect.centery, direcao_x, direcao_y)
     return bala
+
+
 
 def mostrar_mensagem(texto):
     fonte = pygame.font.Font(None, 36)
@@ -173,6 +138,7 @@ def mostrar_mensagem(texto):
 # Carregar imagem de fundo
 fundo = pygame.image.load("assets/back.png")
 fundo = pygame.transform.scale(fundo, (largura_tela, altura_tela))
+
 
 def exibir_menu():
     pygame.init()
@@ -282,14 +248,14 @@ def jogo():
     espacamento = 5  # Espaçamento entre os botões em pixels
 
     for numero in reversed(range(10)):
-        botao = Botao(str(numero), (posicao_x + 45, altura_tela - 50))
+        botao = Botao(str(numero), (posicao_x +45, altura_tela - 50))
         botao.atualizar_texto()
         grupo_botoes.add(botao)
         posicao_x -= largura_botao + espacamento  # Atualizar a posição X para o próximo botão
 
     # Adicionar botão de remoção
     remover_imagem = pygame.transform.scale(pygame.image.load("assets/remover.png"), (largura_botao, largura_botao))
-    botao_remover = BotaoRemover(remover_imagem, (posicao_x + 45, altura_tela - 50))
+    botao_remover = BotaoRemover(remover_imagem, (posicao_x +45, altura_tela - 50))
     grupo_botoes.add(botao_remover)
 
     # Atualizar a posição X do botão 9 para acomodar o botão remover ao lado esquerdo
@@ -298,20 +264,7 @@ def jogo():
     # Atualizar a posição dos botões restantes
     for botao in grupo_botoes:
         botao.rect.x -= (largura_botao + espacamento)
-    imagem_coracao = carregar_imagem_coração("assets/heart.png")
-    # Criar grupo de corações
-    coracoes = pygame.sprite.Group()
-    posicao_x_coracoes = largura_tela - 700  # Posição inicial X para o primeiro coração
-    espacamento_coracoes = 35  # Espaçamento entre os corações em pixels
-    vida_maxima = 3
 
-    # Adicionar corações ao grupo
-    for i in range(vida_maxima):
-        coracao = Coracao(imagem_coracao, (posicao_x_coracoes, altura_tela - 50))
-        coracoes.add(coracao)
-        posicao_x_coracoes -= espacamento_coracoes
-
-        
     rodando = True
     contador_tempo = 0
     quantidade_invasores = 0
@@ -320,35 +273,42 @@ def jogo():
     velocidade_invasores = 1
     contador_velocidade = 0
 
-    resposta_atual = ""  # Declaração da variável resposta_atual
+    resposta_atual = ""
+    invasor_acertado = None
+    disparar_tiro = False
     mostrar_valor = True  # Controla a exibição do valor inserido
 
     while rodando:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 rodando = False
-            elif evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
-                jogador_acertou = False  # Variável para indicar se o jogador acertou a resposta
+            elif evento.type == pygame.KEYDOWN:
+# Após verificar se o jogador pressionou a tecla de espaço
+                if invasor_acertado:
+                    resultado = invasor_acertado.calcular_resultado()  # Obter o resultado da conta do vírus
+                    if resposta_atual == str(resultado):  # Comparar a resposta do jogador com o resultado da conta
+                        # O jogador acertou a conta
+                        dx = invasor_acertado.rect.centerx - jogador.rect.centerx
+                        dy = invasor_acertado.rect.centery - jogador.rect.centery
+                        angulo = math.atan2(dy, dx)
+                        direcao_x = math.cos(angulo)
+                        direcao_y = math.sin(angulo)
 
-                for invasor in invasores:
+                        # Calcular a diferença absoluta entre a resposta do jogador e o resultado correto
+                        diferenca = abs(int(resposta_atual) - resultado)
 
-                    if resposta_atual == str(invasor.calcular_resposta()):
-                        jogador_acertou = True  # O jogador acertou a resposta
+                        # Ajustar a velocidade da bala com base na diferença
+                        velocidade_bala = 1 + (10 - diferenca) * 0.1
 
-
-                if jogador_acertou:
-                    invasores_certos = [invasor for invasor in invasores if str(invasor.calcular_resposta()) == resposta_atual]
-                    for invasor in invasores_certos:
-                        invasores.remove(invasor)
-                    pontuacao += len(invasores_certos)
+                        # Criar a bala com a velocidade ajustada
+                        bala = criar_bala(jogador, direcao_x, direcao_y, velocidade_bala)
+                        balas.add(bala)
+                    else:
+                        print('Resposta incorreta')  # A resposta do jogador não corresponde ao resultado da conta
+                    resposta_atual = ""
                 else:
-                    print('Resposta incorreta')
-                    if len(coracoes) > 0:
-                        coracao_perdido = coracoes.sprites()[-1]
-                        coracoes.remove(coracao_perdido)
+                    print('Nenhum vírus acertado')
 
-                resposta_atual = ""  # Limpar a resposta atual
-                mostrar_valor = True  # Exibir o valor inserido novamente
 
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1:
@@ -366,6 +326,10 @@ def jogo():
         invasores.update()
         balas.update()
 
+        colisoes = pygame.sprite.groupcollide(balas, invasores, True, True)
+        for bala, invasor in colisoes.items():
+            invasor_acertado = invasor
+
         if contador_tempo == 10 * 60:
             quantidade_invasores += 2
         elif contador_tempo == 20 * 60:
@@ -376,18 +340,23 @@ def jogo():
         quantidade_invasores = min(quantidade_invasores, 10)
 
         while len(invasores) < quantidade_invasores:
-            invasores.add(criar_invasores(1).sprites()[0])  # Criar um invasor e adicioná-lo ao grupo
-        # Verificar se não há mais corações (Game Over)
+            invasores.add(Invasor(random.choice(["+", "-", "*", "/"])))
 
         for invasor in invasores:
             if invasor.rect.bottom >= altura_tela:
                 mostrar_mensagem("Game Over")
                 rodando = False
 
+            jogador_colisoes = pygame.sprite.spritecollide(jogador, invasores, False)
+            if jogador_colisoes:
+                mostrar_mensagem("Game Over")
+                rodando = False
+
+
         jogador_group = pygame.sprite.Group()
         jogador_group.add(jogador)
         jogador_group.draw(tela)
-        coracoes.draw(tela)
+
         invasores.draw(tela)
         balas.draw(tela)
 
@@ -414,15 +383,29 @@ def jogo():
         if contador_velocidade == 800:
             velocidade_invasores += 0.2
             contador_velocidade = 0
-        if len(coracoes) == 0:
-            mostrar_mensagem("Game Over")
-            rodando = False
 
         for invasor in invasores:
             invasor.velocidade = velocidade_invasores
 
-    
+        if disparar_tiro:
+            dx = invasor_acertado.rect.centerx - jogador.rect.centerx
+            dy = invasor_acertado.rect.centery - jogador.rect.centery
+            angulo = math.atan2(dy, dx)
+            direcao_x = math.cos(angulo)
+            direcao_y = math.sin(angulo)
+            bala = Bala()
+            bala.rect.centerx = jogador.rect.centerx
+            bala.rect.centery = jogador.rect.centery
+            bala.velocidade_x = direcao_x * bala.velocidade
+            bala.velocidade_y = direcao_y * bala.velocidade
+            balas.add(bala)
+            invasor_acertado = None
+            resposta_atual = ""
+            disparar_tiro = False
+
+        if not invasores:
+            invasores.add(Invasor(random.choice(["+", "-", "*", "/"])))
+
+
     exibir_menu()
-
-
 exibir_menu()
