@@ -1,7 +1,6 @@
 import pygame
 import random
-import operator
-import math
+
 
 
 pygame.init()
@@ -127,7 +126,7 @@ def carregar_imagem_coração(caminho):
 
 def criar_invasores(quantidade):
     invasores = pygame.sprite.Group()
-    #operacoes = ["+", "*", "/"]
+    operacoes = ["+", "*", "/"]
     for _ in range(quantidade):
         operacao = random.choice(operacoes)
         invasor = Invasor(operacao)
@@ -301,7 +300,7 @@ def jogo():
     imagem_coracao = carregar_imagem_coração("assets/heart.png")
     # Criar grupo de corações
     coracoes = pygame.sprite.Group()
-    posicao_x_coracoes = largura_tela - 700  # Posição inicial X para o primeiro coração
+    posicao_x_coracoes = largura_tela - 680  # Posição inicial X para o primeiro coração
     espacamento_coracoes = 35  # Espaçamento entre os corações em pixels
     vida_maxima = 3
 
@@ -311,7 +310,8 @@ def jogo():
         coracoes.add(coracao)
         posicao_x_coracoes -= espacamento_coracoes
 
-        
+    pygame.mixer.music.load("assets/musica.mp3")
+    pygame.mixer.music.play(-1)  # "-1" indica que a música será reproduzida em um loop contínuo
     rodando = True
     contador_tempo = 0
     quantidade_invasores = 0
@@ -324,6 +324,8 @@ def jogo():
     mostrar_valor = True  # Controla a exibição do valor inserido
 
     while rodando:
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play()
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 rodando = False
@@ -383,6 +385,7 @@ def jogo():
             if invasor.rect.bottom >= altura_tela:
                 mostrar_mensagem("Game Over")
                 rodando = False
+                pygame.mixer.music.stop() 
 
         jogador_group = pygame.sprite.Group()
         jogador_group.add(jogador)
@@ -417,11 +420,13 @@ def jogo():
         if len(coracoes) == 0:
             mostrar_mensagem("Game Over")
             rodando = False
+            pygame.mixer.music.stop() 
 
         for invasor in invasores:
             invasor.velocidade = velocidade_invasores
 
-    
+ 
+
     exibir_menu()
 
 
