@@ -250,10 +250,11 @@ def exibir_recordes():
 
     recordes = carregar_recordes()
     recordes_ordenados = sorted(recordes, reverse=True)
+    recordes_ordenados = recordes_ordenados[:8]
 
     voltar_texto = fonte_botao.render("VOLTAR", True, branco)
     voltar_rect = voltar_texto.get_rect()
-    voltar_rect.center = (largura_tela // 2, altura_tela - 100)
+    voltar_rect.center = (largura_tela // 2 + 300, altura_tela - 50)
 
     rodando = True
     while rodando:
