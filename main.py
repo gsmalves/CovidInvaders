@@ -512,7 +512,7 @@ def jogo():
         contador_velocidade += 1
 
         if contador_velocidade == 900:
-            velocidade_invasores += 0.17
+            velocidade_invasores += 0.1
             contador_velocidade = 0
 
         while len(invasores) < quantidade_invasores:
@@ -521,10 +521,11 @@ def jogo():
 
         for invasor in invasores:
             if invasor.rect.bottom >= altura_tela:
-                salvar_pontuacao(pontuacao)
-                mostrar_mensagem("Game Over")
-                rodando = False
-                som_musica.stop()
+                if len(coracoes) > 0:
+                    coracao_perdido = coracoes.sprites()[-1]
+                    coracoes.remove(coracao_perdido)
+                invasores.remove(invasor)
+
 
         jogador_group = pygame.sprite.Group()
         jogador_group.add(jogador)
