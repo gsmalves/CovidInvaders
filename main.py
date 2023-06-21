@@ -1,8 +1,6 @@
 import pygame
 import random
 
-
-
 pygame.init()
 
 largura_tela = 800
@@ -58,7 +56,7 @@ class Invasor(pygame.sprite.Sprite):
         elif self.operacao == "*":
             return self.valor1 * self.valor2
         elif self.operacao == "/":
-            return self.valor1 / self.valor2
+            return int(self.valor1 / self.valor2)
 
     def update(self):
         self.rect.y += self.velocidade
@@ -99,6 +97,14 @@ class Botao(pygame.sprite.Sprite):
     def draw(self, tela):
         tela.blit(self.texto, self.rect)
 
+class BotaoPausa(pygame.sprite.Sprite):
+    def __init__(self, imagem, posicao):
+        super().__init__()
+        self.image = imagem
+        self.rect = self.image.get_rect()
+        self.rect.topleft = posicao
+
+
 class BotaoRemover(pygame.sprite.Sprite):
     def __init__(self, imagem, posicao):
         super().__init__()
@@ -126,7 +132,7 @@ def carregar_imagem_coração(caminho):
 
 def criar_invasores(quantidade):
     invasores = pygame.sprite.Group()
-    operacoes = ["+", "*", "/"]
+    operacoes = ["+", "*", "/","-"]
     for _ in range(quantidade):
         operacao = random.choice(operacoes)
         invasor = Invasor(operacao)
@@ -155,6 +161,7 @@ def criar_invasores(quantidade):
             invasor.valor2 = random.randint(1, 10)
             invasor.valor1 = invasor.valor2 * random.randint(1, 10)  # Garante que valor1 seja um múltiplo de valor2
             invasor.resposta = int(invasor.valor1 / invasor.valor2)
+
         invasores.add(invasor)
     return invasores
 
@@ -310,8 +317,21 @@ def jogo():
         coracoes.add(coracao)
         posicao_x_coracoes -= espacamento_coracoes
 
-    pygame.mixer.music.load("assets/musica.mp3")
-    pygame.mixer.music.play(-1)  # "-1" indica que a música será reproduzida em um loop contínuo
+    som_musica = pygame.mixer.Sound("assets/musica.mp3")
+    som_musica.play(-1)  # Reproduzir música em loop contínuo
+    som_explosao = pygame.mixer.Sound("assets/efeitobomba.mp3")
+    
+    imagem_pause = pygame.image.load("assets/play-button.png")
+    
+    # Redimensionar a imagem do botão de pausa para as dimensões desejadas
+    largura_botao_pause = 30
+    altura_botao_pause = 30
+    imagem_pause = pygame.transform.scale(imagem_pause, (largura_botao_pause, altura_botao_pause))
+
+    # Definir a posição do botão de pausa no canto superior direito da tela
+    posicao_x_pause = largura_tela - largura_botao_pause - 10
+    posicao_y_pause = 10
+
     rodando = True
     contador_tempo = 0
     quantidade_invasores = 0
@@ -323,9 +343,11 @@ def jogo():
     resposta_atual = ""  # Declaração da variável resposta_atual
     mostrar_valor = True  # Controla a exibição do valor inserido
 
+    pausado = False  # Variável para controlar o estado de pausa do jogo
+
     while rodando:
-        if not pygame.mixer.music.get_busy():
-            pygame.mixer.music.play()
+
+        
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 rodando = False
@@ -333,14 +355,14 @@ def jogo():
                 jogador_acertou = False  # Variável para indicar se o jogador acertou a resposta
 
                 for invasor in invasores:
-
+                    print("=", invasor.calcular_resposta())
                     if resposta_atual == str(invasor.calcular_resposta()):
                         jogador_acertou = True  # O jogador acertou a resposta
-
 
                 if jogador_acertou:
                     invasores_certos = [invasor for invasor in invasores if str(invasor.calcular_resposta()) == resposta_atual]
                     for invasor in invasores_certos:
+                        som_explosao.play()
                         invasores.remove(invasor)
                     pontuacao += len(invasores_certos)
                 else:
@@ -354,6 +376,13 @@ def jogo():
 
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1:
+                    if posicao_x_pause <= evento.pos[0] <= posicao_x_pause + largura_botao_pause and posicao_y_pause <= evento.pos[1] <= posicao_y_pause + altura_botao_pause:
+                        pausado = not pausado
+                    if pausado:
+                        som_musica.stop()
+                    else:
+                        som_musica.play(-1)
+
                     for botao in grupo_botoes:
                         if botao.rect.collidepoint(evento.pos):
                             if botao is botao_remover:
@@ -362,8 +391,12 @@ def jogo():
                                 resposta_atual += botao.numero
                                 botao.atualizar_texto()  # Atualizar o texto do botão
 
-        tela.blit(fundo, (0, 0))
+        if pausado:
+            continue
 
+        tela.blit(fundo, (0, 0))
+        tela.blit(imagem_pause, (posicao_x_pause, posicao_y_pause))
+        
         jogador.update()
         invasores.update()
         balas.update()
@@ -385,13 +418,14 @@ def jogo():
             if invasor.rect.bottom >= altura_tela:
                 mostrar_mensagem("Game Over")
                 rodando = False
-                pygame.mixer.music.stop() 
+                som_musica.stop()
 
         jogador_group = pygame.sprite.Group()
         jogador_group.add(jogador)
         jogador_group.draw(tela)
         coracoes.draw(tela)
         invasores.draw(tela)
+        grupo_botoes.draw(tela)
         balas.draw(tela)
 
         for invasor in invasores:
@@ -420,7 +454,7 @@ def jogo():
         if len(coracoes) == 0:
             mostrar_mensagem("Game Over")
             rodando = False
-            pygame.mixer.music.stop() 
+            som_musica.stop()
 
         for invasor in invasores:
             invasor.velocidade = velocidade_invasores
