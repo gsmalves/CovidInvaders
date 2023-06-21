@@ -45,7 +45,7 @@ class Invasor(pygame.sprite.Sprite):
         self.valor1 = random.randint(1, 9)
         self.valor2 = random.randint(1, 9)
         self.resposta = self.calcular_resposta()
-        self.velocidade = 0.25
+        self.velocidade = 0.17
 
 
     def calcular_resposta(self):
@@ -132,7 +132,9 @@ def carregar_imagem_coração(caminho):
 
 def criar_invasores(quantidade):
     invasores = pygame.sprite.Group()
-    operacoes = ["+", "*", "/","-"]
+    operacoes = ["+", "*", "/", "-"]
+    distancia_minima = 100  # Distância mínima desejada entre os invasores
+    
     for _ in range(quantidade):
         operacao = random.choice(operacoes)
         invasor = Invasor(operacao)
@@ -140,10 +142,19 @@ def criar_invasores(quantidade):
         invasor.rect.y = -invasor.rect.height
 
         colisoes = pygame.sprite.spritecollide(invasor, invasores, False)
-        while colisoes:  # Verifica se houve colisão com outro invasor
+        while colisoes:  # Verifica se houve colisão com outro invasor ou se está muito próximo
             invasor.rect.x = random.randint(0, largura_tela - invasor.rect.width)
             invasor.rect.y = -invasor.rect.height
+
             colisoes = pygame.sprite.spritecollide(invasor, invasores, False)
+
+            # Verifica se o novo invasor está muito próximo de outros invasores
+            for invasor_existente in invasores:
+                distancia = math.sqrt((invasor.rect.x - invasor_existente.rect.x) ** 2 +
+                                      (invasor.rect.y - invasor_existente.rect.y) ** 2)
+                if distancia < distancia_minima:
+                    colisoes.append(invasor_existente)
+                    break
 
         if operacao == "+":
             invasor.valor1 = random.randint(0, 10)
@@ -276,7 +287,7 @@ def exibir_menu():
 
 def jogo():
     jogador = Jogador()
-    balas = pygame.sprite.Group()
+   
 
     pontuacao = 0
     fonte = pygame.font.Font(None, 36)
@@ -322,6 +333,10 @@ def jogo():
     som_explosao = pygame.mixer.Sound("assets/efeitobomba.mp3")
     
     imagem_pause = pygame.image.load("assets/play-button.png")
+
+    imagem_explosao = pygame.image.load("assets/explosion.png").convert_alpha()
+    imagem_explosao = pygame.transform.scale(imagem_explosao, (50, 50))
+
     
     # Redimensionar a imagem do botão de pausa para as dimensões desejadas
     largura_botao_pause = 30
@@ -355,7 +370,6 @@ def jogo():
                 jogador_acertou = False  # Variável para indicar se o jogador acertou a resposta
 
                 for invasor in invasores:
-                    print("=", invasor.calcular_resposta())
                     if resposta_atual == str(invasor.calcular_resposta()):
                         jogador_acertou = True  # O jogador acertou a resposta
 
@@ -364,7 +378,10 @@ def jogo():
                     for invasor in invasores_certos:
                         som_explosao.play()
                         invasores.remove(invasor)
+                        tela.blit(imagem_explosao, invasor.rect.center)
+                        pygame.display.flip()
                     pontuacao += len(invasores_certos)
+                    pygame.time.wait(200) 
                 else:
                     print('Resposta incorreta')
                     if len(coracoes) > 0:
@@ -399,16 +416,25 @@ def jogo():
         
         jogador.update()
         invasores.update()
-        balas.update()
 
-        if contador_tempo == 10 * 60:
-            quantidade_invasores += 2
+
+        if contador_tempo == 4 * 60:
+            quantidade_invasores += 1
+        elif contador_tempo == 15 * 60:
+            quantidade_invasores += 1
         elif contador_tempo == 20 * 60:
-            quantidade_invasores += 4
+            quantidade_invasores += 2
         elif contador_tempo > 20 * 60 and contador_tempo % (10 * 60) == 0:
             quantidade_invasores += 1
 
         quantidade_invasores = min(quantidade_invasores, 10)
+        
+        contador_tempo += 1
+        contador_velocidade += 1
+
+        if contador_velocidade == 900:
+            velocidade_invasores += 0.17
+            contador_velocidade = 0
 
         while len(invasores) < quantidade_invasores:
             invasores.add(criar_invasores(1).sprites()[0])  # Criar um invasor e adicioná-lo ao grupo
@@ -426,7 +452,7 @@ def jogo():
         coracoes.draw(tela)
         invasores.draw(tela)
         grupo_botoes.draw(tela)
-        balas.draw(tela)
+        
 
         for invasor in invasores:
             texto = fonte.render(f"{invasor.valor1} {invasor.operacao} {invasor.valor2} =", True, vermelho)
@@ -445,12 +471,6 @@ def jogo():
         pygame.display.flip()
         clock.tick(60)
 
-        contador_tempo += 1
-        contador_velocidade += 1
-
-        if contador_velocidade == 800:
-            velocidade_invasores += 0.2
-            contador_velocidade = 0
         if len(coracoes) == 0:
             mostrar_mensagem("Game Over")
             rodando = False
@@ -458,8 +478,6 @@ def jogo():
 
         for invasor in invasores:
             invasor.velocidade = velocidade_invasores
-
- 
 
     exibir_menu()
 
