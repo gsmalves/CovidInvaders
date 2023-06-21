@@ -1,6 +1,13 @@
 import pygame
 import random
 import os
+from jogador import Jogador
+from invasor import Invasor
+from bala import Bala
+from botao import Botao
+from botao_remove import BotaoRemover
+from vida import Coracao
+
 
 pygame.init()
 
@@ -17,114 +24,6 @@ preto = (0, 0, 0)
 vermelho = (255, 0, 0)
 jogo_em_execucao = True
 
-class Jogador(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.image.load("assets/player.png")
-        self.rect = self.image.get_rect()
-        self.rect.centerx = (largura_tela // 2) - 10
-        self.rect.bottom = altura_tela - 10
-        self.velocidade = 5
-
-    def update(self):
-        teclas_pressionadas = pygame.key.get_pressed()
-        if teclas_pressionadas[pygame.K_LEFT] and self.rect.left > 0:
-            self.rect.x -= self.velocidade
-        if teclas_pressionadas[pygame.K_RIGHT] and self.rect.right < largura_tela:
-            self.rect.x += self.velocidade
-
-
-class Invasor(pygame.sprite.Sprite):
-    def __init__(self, operacao):
-        super().__init__()
-        self.image = pygame.image.load("assets/enemy1.png").convert_alpha()  # Carrega a imagem do invasor
-        self.image = pygame.transform.scale(self.image, (50, 50))  # Redimensiona a imagem para o tamanho desejado
-        self.rect = self.image.get_rect()
-        self.rect.x = random.randint(0, largura_tela - self.rect.width)
-        self.rect.y = -self.rect.height
-        self.operacao = operacao
-        self.valor1 = random.randint(1, 9)
-        self.valor2 = random.randint(1, 9)
-        self.resposta = self.calcular_resposta()
-        self.velocidade = 0.17
-
-
-    def calcular_resposta(self):
-        if self.operacao == "+":
-            return self.valor1 + self.valor2
-        elif self.operacao == "-":
-            return self.valor1 - self.valor2
-        elif self.operacao == "*":
-            return self.valor1 * self.valor2
-        elif self.operacao == "/":
-            return int(self.valor1 / self.valor2)
-
-    def update(self):
-        self.rect.y += self.velocidade
-
-
-class Bala(pygame.sprite.Sprite):
-    def __init__(self, x, y, direcao_x, direcao_y):
-        super().__init__()
-        self.image = pygame.image.load("assets/bala.png")
-        self.image = pygame.transform.scale(self.image, (40, 20))  # Redimensionar a imagem da bala
-        self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.centery = y
-        self.direcao_x = direcao_x
-        self.direcao_y = direcao_y
-        self.velocidade = 5
-
-    def update(self):
-        self.rect.x += self.direcao_x * self.velocidade
-        self.rect.y += self.direcao_y * self.velocidade
-
-class Botao(pygame.sprite.Sprite):
-    def __init__(self, numero, posicao):
-        pygame.sprite.Sprite.__init__(self)
-        self.numero = numero
-        self.imagem_normal = pygame.image.load(f"assets/{numero.lower()}.png")
-        self.fonte = pygame.font.Font(None, 24)
-        self.image = pygame.transform.scale(self.imagem_normal, (30, 30))
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = posicao
-
-    def atualizar_texto(self):
-        self.texto = self.fonte.render(self.numero, True, branco)
-
-    def update(self):
-        pass
-
-    def draw(self, tela):
-        tela.blit(self.texto, self.rect)
-
-class BotaoPausa(pygame.sprite.Sprite):
-    def __init__(self, imagem, posicao):
-        super().__init__()
-        self.image = imagem
-        self.rect = self.image.get_rect()
-        self.rect.topleft = posicao
-
-
-class BotaoRemover(pygame.sprite.Sprite):
-    def __init__(self, imagem, posicao):
-        super().__init__()
-        self.image = imagem.convert_alpha()  # Carrega a imagem
-        self.rect = self.image.get_rect()
-        self.rect.topleft = posicao
-
-    def atualizar(self):
-        pass
-
-    def desenhar(self, tela):
-        tela.blit(self.imagem, self.rect)
-
-class Coracao(pygame.sprite.Sprite):
-    def __init__(self, imagem, posicao):
-        super().__init__()
-        self.image = imagem
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = posicao
 
 # Função para carregar a imagem do coração
 def carregar_imagem_coração(caminho):
@@ -663,5 +562,5 @@ def jogo():
 
     exibir_menu()
 
-
-exibir_menu()
+if __name__ == '__main__':
+    exibir_menu()
