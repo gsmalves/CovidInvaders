@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 pygame.init()
 
@@ -193,9 +194,10 @@ fundo = pygame.transform.scale(fundo, (largura_tela, altura_tela))
 
 def exibir_menu():
     pygame.init()
-    
+
     largura_tela = 800
     altura_tela = 600
+    recordes = carregar_recordes()
 
     tela = pygame.display.set_mode((largura_tela, altura_tela))
     pygame.display.set_caption("Covid Invaders Matemático")
@@ -227,15 +229,26 @@ def exibir_menu():
     recordes_rect = recordes_texto.get_rect()
     recordes_rect.center = (largura_tela // 2, altura_tela // 2 + 50)
 
+    ajuda_texto = fonte_descricao.render("AJUDA", True, branco)
+    ajuda_rect = ajuda_texto.get_rect()
+    ajuda_rect.center = (largura_tela // 2, altura_tela // 2 + 90)
+
     sair_texto = fonte_descricao.render("SAIR", True, branco)
     sair_rect = sair_texto.get_rect()
-    sair_rect.center = (largura_tela // 2, altura_tela // 2 + 90)
+    sair_rect.center = (largura_tela // 2, altura_tela // 2 + 130)
 
     # Carregar imagens dos inimigos
     inimigo_images = []
     inimigo_rects = []
 
-    imagens_inimigos = ["assets/virus (2).png", "assets/virus.png", "assets/virus (2).png", "assets/virus (3).png","assets/vaccine (2).png","assets/protect.png"]  # Adicione os nomes das novas imagens de inimigos aqui
+    imagens_inimigos = [
+        "assets/virus (2).png",
+        "assets/virus.png",
+        "assets/virus (2).png",
+        "assets/virus (3).png",
+        "assets/vaccine (2).png",
+        "assets/protect.png",
+    ]  # Adicione os nomes das novas imagens de inimigos aqui
 
     posicoes_inimigos = [
         (largura_tela // 2 - 270, altura_tela // 2 - 100),
@@ -244,7 +257,7 @@ def exibir_menu():
         (largura_tela // 2 + 250, altura_tela // 2 - 120),
         (largura_tela // 2 + 180, altura_tela // 2 + 150),
         (largura_tela // 2 - 180, altura_tela // 2 + 150),
-        ]  # Ajuste as coordenadas (posições) de cada inimigo conforme necessário
+    ]  # Ajuste as coordenadas (posições) de cada inimigo conforme necessário
 
     for i, imagem in enumerate(imagens_inimigos):
         inimigo_image = pygame.image.load(imagem)
@@ -256,6 +269,7 @@ def exibir_menu():
         inimigo_rect = inimigo_image.get_rect()
         inimigo_rect.center = (posicao_x, posicao_y)
         inimigo_rects.append(inimigo_rect)
+
     rodando = True
     while rodando:
         for evento in pygame.event.get():
@@ -265,6 +279,12 @@ def exibir_menu():
                 if jogar_rect.collidepoint(evento.pos):
                     # Iniciar o jogo
                     jogo()
+                elif recordes_rect.collidepoint(evento.pos):
+                    # Abrir tela de recordes
+                    exibir_recordes()
+                elif ajuda_rect.collidepoint(evento.pos):
+                    # Abrir tela de ajuda
+                    exibir_ajuda()
                 elif sair_rect.collidepoint(evento.pos):
                     rodando = False
 
@@ -273,11 +293,171 @@ def exibir_menu():
         tela.blit(descricao_texto, descricao_rect)
         tela.blit(jogar_texto, jogar_rect)
         tela.blit(recordes_texto, recordes_rect)
+        tela.blit(ajuda_texto, ajuda_rect)
         tela.blit(sair_texto, sair_rect)
 
         # Exibir imagens dos inimigos
         for inimigo_rect, inimigo_image in zip(inimigo_rects, inimigo_images):
             tela.blit(inimigo_image, inimigo_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+
+def salvar_pontuacao(pontuacao):
+    with open("recordes.txt", "a") as arquivo:
+        arquivo.write(f"{pontuacao}\n")
+
+
+def carregar_recordes():
+    if not os.path.isfile("recordes.txt"):
+        return []  # Retorna uma lista vazia se o arquivo não existir
+
+    recordes = []
+    with open("recordes.txt", "r") as arquivo:
+        linhas = arquivo.readlines()
+        for linha in linhas:
+            pontuacao = linha.strip()
+            if pontuacao.isdigit():
+                recordes.append(int(pontuacao))
+    return recordes
+
+  
+def exibir_recordes():
+    pygame.init()
+
+    largura_tela = 800
+    altura_tela = 600
+
+    tela = pygame.display.set_mode((largura_tela, altura_tela))
+    pygame.display.set_caption("Covid Invaders Matemático")
+
+    clock = pygame.time.Clock()
+
+    cor_titulo = (255, 189, 89)  # #FFBD59
+    branco = (255, 255, 255)
+
+    fonte_titulo = pygame.font.Font("ArchivoBlack-Regular.ttf", 36)
+    fonte_pontuacao = pygame.font.Font("ArchivoBlack-Regular.ttf", 24)
+    fonte_botao = pygame.font.Font("ArchivoBlack-Regular.ttf", 30)
+
+    fundo = pygame.image.load("assets/back.png")
+    fundo = pygame.transform.scale(fundo, (largura_tela, altura_tela))
+
+    titulo_texto = fonte_titulo.render("RECORDES", True, cor_titulo)
+    titulo_rect = titulo_texto.get_rect()
+    titulo_rect.center = (largura_tela // 2, 100)
+
+    recordes = carregar_recordes()
+    recordes_ordenados = sorted(recordes, reverse=True)
+
+    voltar_texto = fonte_botao.render("VOLTAR", True, branco)
+    voltar_rect = voltar_texto.get_rect()
+    voltar_rect.center = (largura_tela // 2, altura_tela - 100)
+
+    rodando = True
+    while rodando:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                rodando = False
+            elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                if voltar_rect.collidepoint(evento.pos):
+                    # Voltar ao menu
+                    rodando = False
+                    exibir_menu()
+
+        tela.blit(fundo, (0, 0))
+        tela.blit(titulo_texto, titulo_rect)
+
+        posicao_y = 200
+        espacamento = 50
+        numeracao = 1
+
+        for pontuacao in recordes_ordenados:
+            numeracao_texto = fonte_pontuacao.render(f"{numeracao}.", True, branco)
+            numeracao_rect = numeracao_texto.get_rect()
+            numeracao_rect.center = (largura_tela // 2 - 100, posicao_y)
+
+            pontuacao_texto = fonte_pontuacao.render(str(pontuacao), True, branco)
+            pontuacao_rect = pontuacao_texto.get_rect()
+            pontuacao_rect.center = (largura_tela // 2, posicao_y)
+
+            tela.blit(numeracao_texto, numeracao_rect)
+            tela.blit(pontuacao_texto, pontuacao_rect)
+
+            numeracao += 1
+            posicao_y += espacamento
+
+        pygame.draw.rect(tela, cor_titulo, voltar_rect)
+        tela.blit(voltar_texto, voltar_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+
+
+def exibir_ajuda():
+    pygame.init()
+
+    largura_tela = 800
+    altura_tela = 600
+
+    tela = pygame.display.set_mode((largura_tela, altura_tela))
+    pygame.display.set_caption("Covid Invaders Matemático")
+
+    clock = pygame.time.Clock()
+
+    cor_titulo = (255, 189, 89)  # #FFBD59
+    branco = (255, 255, 255)
+
+    fonte_titulo = pygame.font.Font("ArchivoBlack-Regular.ttf", 36)
+    fonte_texto = pygame.font.Font("ArchivoBlack-Regular.ttf", 24)
+    fonte_botao = pygame.font.Font("ArchivoBlack-Regular.ttf", 30)
+
+    fundo = pygame.image.load("assets/back.png")
+    fundo = pygame.transform.scale(fundo, (largura_tela, altura_tela))
+
+    titulo_texto = fonte_titulo.render("AJUDA", True, cor_titulo)
+    titulo_rect = titulo_texto.get_rect()
+    titulo_rect.center = (largura_tela // 2, 100)
+
+    ajuda_texto = "O jogador deve utilizar o teclado númerico na tela do jogo\npara inserir o valor correspondente a operação do vírus\nem seguida deve apertar Space para confirmar.\nSe a resposta for correta, o vírus será eliminado.\nSe for errada, o jogador perde uma das 3 vidas."
+    linhas = ajuda_texto.split("\n")
+    texto_renderizado = []
+    for linha in linhas:
+        texto = fonte_texto.render(linha, True, branco)
+        texto_renderizado.append(texto)
+
+    posicao_y = 200
+    espacamento = 40
+
+    voltar_texto = fonte_texto.render("VOLTAR", True, branco)
+    voltar_rect = voltar_texto.get_rect()
+    voltar_rect.center = (largura_tela // 2, altura_tela - 50)
+
+    rodando = True
+    while rodando:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                rodando = False
+            elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                if voltar_rect.collidepoint(evento.pos):
+                    exibir_menu()
+
+        tela.blit(fundo, (0, 0))
+        tela.blit(titulo_texto, titulo_rect)
+
+        posicao_y = 200  # Reinicia a posição Y a cada iteração
+
+        for texto in texto_renderizado:
+            texto_rect = texto.get_rect()
+            texto_rect.center = (largura_tela // 2, posicao_y)
+            tela.blit(texto, texto_rect)
+            posicao_y += espacamento
+
+        tela.blit(voltar_texto, voltar_rect)
 
         pygame.display.flip()
         clock.tick(60)
@@ -442,6 +622,7 @@ def jogo():
 
         for invasor in invasores:
             if invasor.rect.bottom >= altura_tela:
+                salvar_pontuacao(pontuacao)
                 mostrar_mensagem("Game Over")
                 rodando = False
                 som_musica.stop()
@@ -472,6 +653,7 @@ def jogo():
         clock.tick(60)
 
         if len(coracoes) == 0:
+            salvar_pontuacao(pontuacao)
             mostrar_mensagem("Game Over")
             rodando = False
             som_musica.stop()
