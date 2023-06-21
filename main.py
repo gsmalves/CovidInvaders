@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 import os
 from jogador import Jogador
 from invasor import Invasor
@@ -96,7 +97,7 @@ def exibir_menu():
 
     largura_tela = 800
     altura_tela = 600
-    recordes = carregar_recordes()
+    
 
     tela = pygame.display.set_mode((largura_tela, altura_tela))
     pygame.display.set_caption("Covid Invaders Matemático")
@@ -497,7 +498,7 @@ def jogo():
         jogador.update()
         invasores.update()
 
-
+        #logica para  incremento dos invasores a cada x segundos
         if contador_tempo == 4 * 60:
             quantidade_invasores += 1
         elif contador_tempo == 15 * 60:
@@ -505,6 +506,7 @@ def jogo():
         elif contador_tempo == 20 * 60:
             quantidade_invasores += 2
         elif contador_tempo > 20 * 60 and contador_tempo % (10 * 60) == 0:
+
             quantidade_invasores += 1
 
         quantidade_invasores = min(quantidade_invasores, 10)
@@ -537,7 +539,7 @@ def jogo():
         
 
         for invasor in invasores:
-            texto = fonte.render(f"{invasor.valor1} {invasor.operacao} {invasor.valor2} =", True, vermelho)
+            texto = fonte.render(f"{invasor.valor1} {invasor.operacao} {invasor.valor2} = ?", True, vermelho)
             tela.blit(texto, (invasor.rect.x, invasor.rect.y + invasor.rect.height))
 
         grupo_botoes.update()
